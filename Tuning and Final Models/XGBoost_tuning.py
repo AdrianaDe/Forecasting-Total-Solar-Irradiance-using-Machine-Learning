@@ -1,0 +1,64 @@
+from darts.dataprocessing.transformers import Scaler
+from sklearn.preprocessing import StandardScaler
+# from load_data import load_data_list
+from load_data import load_and_prepare_data
+
+from tuning import Choice
+from tuning import Range
+from tuning import Hyperparameters
+from tuning import find_best_hyperparameters
+
+from models import xgboost
+
+#####################################################
+################# PARAMETERS ########################
+#####################################################
+names = ['reconstructed_tsi', 'ssn', 'phi', 'radio 10.7 cm'] #  ['reconstructed_tsi'] #
+
+savingpath = '/cluster/home/adesassi/Final/XGBoost/Tuning/'  # !!!
+scaler = Scaler(StandardScaler())
+start_year = 1979 # 1968
+n_pred = 11*12
+# n_bootstrap = 20
+n_iterations = 10 # !! (Should be increased)
+
+# Hyperparameter range over which we search best parameters
+hyperparameters = Hyperparameters({
+    "smoothing": Choice([None, 6, 12, 24]),
+    "outlier": Choice([None, 2.2]),
+    "p_val": 0,
+    "p_test": 2012,
+    "n_in": Choice([19*12, 23*12]), # 5*12, 7*12, 9*12, 6*12, 8*12, 11*12, 15*12,
+    "n_out": Choice([1, 6, 12, 24]),
+    "encoders": None, 
+    "seed": Choice([0]), 
+    "max_depth": Choice([2, 3, 4, 5, 7, 9]), 
+    "learning_rate": Choice([0.001, 0.01, 0.1, 0.5]), 
+    "n_estimators": Choice([64, 128, 200, 256, 350, 512]), 
+    "objective": Choice(['reg:squarederror', 'reg:quantileerror']),
+    "quantile_alpha": Choice([[0.5]]), 
+    "booster": Choice(['gbtree']), 
+    "gamma": Choice([0]), 
+    "reg_alpha": Choice([0, 0.05, 0.1, 0.5, 1, 10]), 
+    "reg_lambda": Choice([0, 0.01, 0.05, 0.1, 1, 10]),
+})
+
+#####################################################
+################# LOAD DATA #########################
+#####################################################
+series = load_and_prepare_data(names, split=hyperparameters.dic['p_test'], scaler=scaler, outlier_threshold=None, smoothing_window=None)
+
+#####################################################
+################# TUNING ############################
+#####################################################
+"""
+print('MODEL 1')
+model = xgboost(train = [series.train[0]], hyperparameters=hyperparameters.get_random_combination())
+prediction = model.predict(series=[series.train[0]], n=n_pred)
+
+print('MODEL 2')
+model2 = xgboost(train=series.train, hyperparameters=hyperparameters.get_random_combination())
+prediction2 = model.predict(series=series.train, n=n_pred)
+"""
+                
+find_best_hyperparameters(hyperparameters, names, xgboost, start_year, n_pred, n_iterations, optimizing_i=0, savingpath=savingpath, scaler=series.scaler, method='data_all_model_random')
