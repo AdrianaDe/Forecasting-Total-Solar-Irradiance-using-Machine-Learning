@@ -1,6 +1,5 @@
 from darts.dataprocessing.transformers import Scaler
 from sklearn.preprocessing import StandardScaler
-# from load_data import load_data_list
 from load_data import load_and_prepare_data
 
 from tuning import Choice
@@ -13,14 +12,13 @@ from models import xgboost
 #####################################################
 ################# PARAMETERS ########################
 #####################################################
-names = ['reconstructed_tsi', 'ssn', 'phi', 'radio 10.7 cm'] #  ['reconstructed_tsi'] #
+names = ['reconstructed_tsi'] #['reconstructed_tsi', 'ssn', 'phi', 'radio 10.7 cm'] #  
 
-savingpath = '/cluster/home/adesassi/Final/XGBoost/Tuning/'  # !!!
+savingpath = './XGBoost/tuning/' 
 scaler = Scaler(StandardScaler())
-start_year = 1979 # 1968
+start_year = 1968
 n_pred = 11*12
-# n_bootstrap = 20
-n_iterations = 10 # !! (Should be increased)
+n_iterations = 1 # numer of random combination testet FOR EACH DATA PARAMETER COMBINATION (i.e. smoothing, outlier, n_in, n_out)
 
 # Hyperparameter range over which we search best parameters
 hyperparameters = Hyperparameters({
@@ -28,7 +26,7 @@ hyperparameters = Hyperparameters({
     "outlier": Choice([None, 2.2]),
     "p_val": 0,
     "p_test": 2012,
-    "n_in": Choice([19*12, 23*12]), # 5*12, 7*12, 9*12, 6*12, 8*12, 11*12, 15*12,
+    "n_in": Choice([5*12, 7*12, 9*12, 6*12, 8*12, 11*12, 15*12, 19*12, 23*12]),
     "n_out": Choice([1, 6, 12, 24]),
     "encoders": None, 
     "seed": Choice([0]), 
@@ -51,14 +49,4 @@ series = load_and_prepare_data(names, split=hyperparameters.dic['p_test'], scale
 #####################################################
 ################# TUNING ############################
 #####################################################
-"""
-print('MODEL 1')
-model = xgboost(train = [series.train[0]], hyperparameters=hyperparameters.get_random_combination())
-prediction = model.predict(series=[series.train[0]], n=n_pred)
-
-print('MODEL 2')
-model2 = xgboost(train=series.train, hyperparameters=hyperparameters.get_random_combination())
-prediction2 = model.predict(series=series.train, n=n_pred)
-"""
-                
 find_best_hyperparameters(hyperparameters, names, xgboost, start_year, n_pred, n_iterations, optimizing_i=0, savingpath=savingpath, scaler=series.scaler, method='data_all_model_random')
