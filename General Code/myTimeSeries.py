@@ -22,7 +22,7 @@ class myTimeSeries:
     self.scaler (darts Scaler): scaler which was used to scale self.series (None if no scaling is performed)
     """
     
-    def __init__(self, data, split, scaler=None, outlier_threshold=None, smoothing_window=None, name=None):
+    def __init__(self, data, split, scaler=None, outlier_threshold=None, smoothing_window=None, name='no name'):
         if isinstance(data, TimeSeries):
             self.series_original = data
         elif isinstance(data, pd.DataFrame):
@@ -50,6 +50,8 @@ class myTimeSeries:
         threshold (float): threshold to decide if datapoint is outlier
 
         """
+        if self.outlier_threshold == None:
+            return
         # calculate standard score 
         data = deepcopy(self.series.pd_dataframe()).reset_index(drop=False)
         values = data['val']
@@ -107,13 +109,19 @@ class myTimeSeries:
         scaled_series (TimeSeries, TimeSeriesList): any time serie / list of time series. Usually the prediction of self.series
         
         RETURN: 
-        inverse transformed scaled_serie with self.scaler
+        (list of) TimeSeries that are inverse transformed with self.scaler
         """
         if self.scaler is not None: 
             if isinstance(scaled_series, TimeSeries):
                 return self.scaler.inverse_transform(scaled_series)
-            if isinstance(scaled_series, TimeSeriesList):
+            elif isinstance(scaled_series, TimeSeriesList):
                 return TimeSeriesList([self.scale_back(s) for s in scaled_series.series_list])
+            elif isinstance(scaled_series, list): 
+                return [self.scale_back(s) for s in scaled_series]
+            else: 
+                print('ERROR: scaled_series has no valid format. Type is:')
+                print(type(scaled_series))
+                sys.exit(1)
         else: 
             return scaled_series
 
@@ -185,8 +193,11 @@ class TimeSeriesList:
         """
         series = []
         for i, x in enumerate(self.series_list):
-            series.append(x.scale_back(self, scaled_series[i]))
-        return TimeSeriesList(series)
+            series.append(x.scale_back(scaled_series[i]))
+        if isinstance(scaled_series, TimeSeriesList):
+            return TimeSeriesList(series)
+        else: 
+            return series       
     
     def len(self):
         return len(self.series_list)
