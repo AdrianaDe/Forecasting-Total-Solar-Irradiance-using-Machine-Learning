@@ -6,9 +6,9 @@ import numpy as np
 from datetime import datetime
 from datetime import timedelta
 import math
+import sys
 
-# path = '/content/drive/MyDrive/Colab Notebooks/DATA/'  # path on google Colab
-path = '/cluster/home/adesassi/DATA/'  # path on euler
+path = './DATA/'  # '/cluster/home/adesassi/DATA/'
 
 
 def from_JulianDay_to_year(julian_day, start_year = 1721424.5): 
@@ -28,7 +28,7 @@ def from_JulianDay_to_year(julian_day, start_year = 1721424.5):
 def to_monthly(df, name='val', day_of_month=1):
     """
     converts a pd.DateFrame with daily data into a pd.DateFrame with monthly data.
-    A monthly datapoint is the mean of all values during this month
+    A monthly datapoint is the average of all values during this month
 
     Parameters:
     df (pandas DataFrame): data with time entry 'date' and values saved in the entry name
@@ -59,6 +59,13 @@ def to_monthly(df, name='val', day_of_month=1):
     return df_m
 
 def decimal_year_to_date(decimal_year):
+    """
+    PARAMETER:
+    decimal_year (float): year as decimal number
+    
+    RETURNS:
+    year in datetime.datetime format
+    """
     year = int(decimal_year)
     rest = decimal_year - year
     
@@ -80,7 +87,11 @@ def decimal_year_to_date(decimal_year):
 
 def import_tsi(freq = 'm'):
     '''
-    freq = 'd', 'm' or 'y' for daily, monthly or yearly data
+    PARAMETERS:
+    freq (str): 'd' or 'm' for daily, monthly or yearly data
+    
+    RETURNS:
+    PMOD Total Solar Irradiance Data (pd.DataFrame) with chosen frequency
     '''
     names = ['Time_dec', 'Time_JD', 'TSI', 'Unc', 'TSI_after_corr', 'Unc_after_corr']
     tsi = pd.read_csv(path + "TSI_MergedPMOD_NobaselineScaleCycle23_JPM_Dec2023.txt", delimiter=' ', names=names, skiprows=1)
@@ -96,19 +107,27 @@ def import_tsi(freq = 'm'):
         # tsi = pd.DataFrame({'val': tsi['TSI_after_corr'].values, 'year_dec': tsi['Time_dec'].values, 'date': tsi['date']})
         
     elif freq == 'y':
-        print('yearl not implemented, TODO')
-        return 0
+        print('Yearl not implemented. Implement or choose monthly / daily. ')
+        sys.exit(1)
    
     else: 
         print(freq, 'is not a valid frequency. Choose daily \'d\', monthly \'m\' or yearly \'y\'')
-        return 0
+        sys.exit(1)
         
     return tsi
     
     
 def import_reconstructed_tsi(freq='m'):
+    '''
+    PARAMETERS:
+    freq (str): 'm' or 'y' for monthly or yearly data
+    
+    RETURNS:
+    NRL Total Solar Irradiance Data (pd.DataFrame) with chosen frequency
+    '''
     if freq == 'd':
-        print('No dayli recontructed data available. Use import_tsi().')
+        print('No dayli recontructed data available. But daily data aivalable for PMOD -> use import_tsi().')
+        sys.exit(1)
         
     elif freq=='m': 
         tsi = pd.read_csv(path + 'nrl2_tsi_P1M.csv', delimiter=',') 
@@ -116,24 +135,27 @@ def import_reconstructed_tsi(freq='m'):
         date = from_JulianDay_to_year(tsi['time (days since 1610-01-01)'], -d)
         tsi = pd.DataFrame({'date': date, 'val': tsi['irradiance (W/m^2)'].values, 'unc': tsi['uncertainty (W/m^2)']})
         tsi = to_monthly(tsi, 'val')
-        return tsi
     
     elif freq=='y':
         tsi = pd.read_csv(path + 'historical_tsi.csv', delimiter=',')
         date = [datetime(y, 1, 1) for y in tsi['time (yyyy)']]
         tsi = pd.DataFrame({'date': date, 'val': tsi['Irradiance (W/m^2)'].values, 'Time_dec': tsi['time (yyyy)']})
-        return tsi
         
     else:
         print(freq, 'is not a valid frequency. Choose daily \'d\', monthly \'m\' or yearly \'y\'')
-
-    return 0
+        sys.exit(1)
+        
+    return tsi
 
 
     
 def import_ssn(freq = 'm'):
     '''
-    freq = 'd', 'm' or 'y' for daily, monthly or yearly data
+    PARAMETERS:
+    freq (str): 'm' for monthly data (other not implemented)
+    
+    RETURNS:
+    Sunspot Number Data (pd.DataFrame) with chosen frequency
     '''
     if freq == 'm':
         names = ['year', 'month', 'year_dec', 'val', 'std', 'number_obs', '?']
@@ -144,21 +166,25 @@ def import_ssn(freq = 'm'):
         ssn = ssn.loc[:, ('val', 'year_dec', 'date')]
     
     elif freq == 'd': 
-        print('daily not implemented, TODO')
-        return 0
+        print('daily not implemented. Implement or choose monthly. ')
+        sys.exit(1)
     elif freq == 'y': 
-        print('yearly not implemented, TODO')
-        return 0
+        print('yearly not implemented. Implement or choose monthly. ')
+        sys.exit(1)
     else: 
         print(freq, 'is not a valid frequency. Choose daily \'d\', monthly \'m\' or yearly \'y\'')
-        return 0
+        sys.exit(1)
     
     return ssn
     
     
 def import_mg2(freq = 'm'):
     '''
-    freq = 'd', 'm' or 'y' for daily, monthly or yearly data
+    PARAMETERS:
+    freq (str): 'd' or 'm' for daily or monthly data
+    
+    RETURNS:
+    mg2 Data (pd.DataFrame) with chosen frequency
     '''
     if freq == 'm':
         names = ['fractional_year', 'month', 'day', 'index', 'unc'] # 'fractional_year',
@@ -186,20 +212,27 @@ def import_mg2(freq = 'm'):
         mg = pd.DataFrame({'val': mg['index'], 'year_dec': mg['fractional_year'], 'date': date})
         
     elif freq == 'y': 
-        print('yearly not implemented, TODO')
-        return 0
+        print('yearly not implemented, Implement or choose monthly / daily')
+        sys.exit(1)
     else: 
         print(freq, 'is not a valid frequency. Choose daily \'d\', monthly \'m\' or yearly \'y\'')
-        return 0
+        sys.exit(1)
     
     return mg
 
 
 def import_phi(freq='m'):
+    '''
+    PARAMETERS:
+    freq (str): 'm' for monthly data (other frequencies not implemented)
+    
+    RETURNS:
+    Cosmic Ray Modulation Potential phi(pd.DataFrame) with chosen frequency
+    '''
     phi = pd.read_csv(path + "Phi_monthly_1951-2023(utf-8).csv", delimiter=',')
     if freq == 'd':
         print('no daily data for phi available')
-        return 0
+        return sys.exit(1)
     elif freq == 'm':
         date = [decimal_year_to_date(dec_year) for dec_year in phi['Year']]
         date_range = pd.date_range(start='1951-02-01', end='2023-12-01', freq='MS')
@@ -207,12 +240,21 @@ def import_phi(freq='m'):
         phi = pd.DataFrame({'date': date_array, 'val': phi['Phi_(MV)'], 'Time_dec': phi['Year'], 'date_original': date})
         return phi
     elif freq =='y':
-        print('TODO: Implement frequency y for phi')
-        return 0
+        print('yearly not implemented for phi. Implement or choose monthly')
+        sys.exit(1)
     else:
         print('Frequency ' + str(freq) + ' is not valid. Choose yearly (y), monthly (m) or daily (d).')
+        sys.exit(1)
 
 def import_radio107(freq = 'm', name='107'):
+    '''
+    PARAMETERS:
+    freq (str): 'm' for monthly data (other frequencies not implemented)
+    name (str): corresponds to wavelength, part of the file name where data is saved
+    
+    RETURNS:
+    Radia Flux (pd.Dataframe) with chosen frequency chosen frequency
+    '''
     data = pd.read_csv(path + 'cls_radio_flux_f'+name+'.csv', delimiter=',', skiprows=0) 
     date = []
     for d in data['time (yyyy MM dd)']:
@@ -227,8 +269,8 @@ def import_radio107(freq = 'm', name='107'):
     elif freq == 'm': 
         return to_monthly(data)
     elif freq == 'y':
-        print('TODO: implement importing yearly radio10.7 & radio15 data.')
-        return 0
+        print('yearly not implemented for radio flux. Implement or choose monthly / daily')
+        return sys.exit(1)
 
 
 def import_radio150(freq='m'): 
@@ -236,6 +278,13 @@ def import_radio150(freq='m'):
 
 
 def get_import_function(name):
+    """
+    PARAMETERS:
+    name (str): needs to be one of the predefined names corresponding to a dataset
+    
+    RETURNS:
+    the import funcition for the correspoinding dataset
+    """
     if name=='tsi' or name == 'PMOD':
         return import_tsi
     elif name=='reconstructed_tsi' or name=='long_tsi' or name=='NRL' or name=='tsi_reconstructed':
@@ -244,24 +293,25 @@ def get_import_function(name):
         return import_ssn
     elif name=='phi': 
         return import_phi
-    elif name=='radio 10.7 cm' or name=='radio107' or name=='radio 107 mm':
+    elif name=='radio 10.7 cm' or name=='radio107' or name=='radio 107 mm' or name=='F10.7':
         return import_radio107
-    elif name=='radio 15 cm' or name=='radio150' or name=='radio 150 mm': 
+    elif name=='radio 15 cm' or name=='radio150' or name=='radio 150 mm' or name=='F15.0': 
         return import_radio150
     elif name=='mg2':
         return import_mg2
     else:
         print(name, ' is no valid name!')
-        return 0
+        sys.exit(1)
 
 
 def load_data_list(names, freq='m'): 
     """
-    PARAMETER
+    PARAMETERS:
     name (list of str): names of the data we want to load
+    feq (str): 'd', 'm' or 'y' for daily / monthly / yearly data
     
-    RETURN
-    pd.DataFrame of the data. At least column 'date' with timestapms and column 'val' with values
+    RETURNS: 
+    Data Sets (list of pd.Dataframe): the dataframe contains at least 'date' with timestamps and 'val' with values
     """
     data = []
     for n in names: 
@@ -269,7 +319,19 @@ def load_data_list(names, freq='m'):
 
     return data
     
+    
 def prepare_data(data, names, split, scaler=None, outlier_threshold=None, smoothing_window=None):
+    """"
+    PARAMETERS:
+    data (list of pd.DataFrame): timeseries in DataFrame format in alist
+    names (list of str): names of the time series
+    scaler (Darts Scaler): scaler that should be used to scale timeseries, can be a list if each time serie should be scaled different. 
+    outlier_threshold (float): threshold to remove outlier
+    smoothing_window (int): number of datapoints to take average over
+    
+    RETURNS:
+    TimeSeriesList of myTimeSeries: .series gives list of prepared time series and .series_original of time series without scaling,smoothin,outlier removement
+    """
     x = []
     for i, d in enumerate(data):
         if isinstance(scaler, list):

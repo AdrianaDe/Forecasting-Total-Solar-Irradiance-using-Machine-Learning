@@ -7,6 +7,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from load_data import load_and_prepare_data
 from load_data import prepare_data
+from load_data import load_data_list
 from evaluation import get_error
 
 from myTimeSeries import myTimeSeries
@@ -35,6 +36,9 @@ class Choice: # Hyperparameter can be one value out of a list
         
  
 class Hyperparameters:
+    """
+    Dictionary of all hyperparameters (can be from Type Range, Choice or directly the parameter itself)
+    """
     def __init__(self, dic):
         self.dic = dic
 
@@ -123,9 +127,26 @@ def backtesting(run_model, hyperparameters, names, start_year, n_pred, stride=No
     
     
     
-def find_best_hyperparameters(hyperparameters, names, run_model, start_year, n_pred, n_iterations=1, optimizing_i=0, savingpath=None, scaler=None, model_number=0, method='random'):
+def find_best_hyperparameters(hyperparameters, names, run_model, start_year, n_pred, n_iterations=1, optimizing_i=0, savingpath=None, scaler=None, model_number=0, method='random', data=None):
     """
-    method (str): 'all': go over all parameters, 'random': completely random over all hyperparameters, 'data_all_model_random': look in each dataparameter for random
+    (random) search over different hyperparameters. Prints MSE of every tried combination into 'all_results.txt' and best MSE into 'best_models_results.txt'
+    
+    PARAMETERS: 
+    hyperparameters (Hyperparametrs): includes all hyperparameters over which we want to search
+    names (list of 'str'): names of the data used for the model
+    run_model (function from models.py): function to generate and train a model
+    start_year (int): for backtesting, the year where firs historical forecast starts
+    n_pred (int): number of datapoints to forecast and optimize on (usually 11*12)
+    n_iterations (int): number of random selected parameters that are tried
+    optimizing_i (int): for multi time series over which time series do we want to optimize (e.g. for names=['tsi', 'ssn'] we want train over all but to optimize for tsi, therefore optimizing_i=0)
+    savingpath (str): path where to save information about tried hyperparameters
+    scaler (darts Scaler): how to scale the data
+    model_number: in the .txt file models are numbered. If we run again and don't want to overwrite numbers, write here the next number coming
+    method (str): 3 options:
+        - 'all': go over all parameters
+        - 'random': completely random over all hyperparameters
+        - 'data_all_model_random': try every dataparameter combination and for each combination try n_iteration random combination of other hyperparameters -> see Hyperparameters.get_all_data_combinations()
+    data (pd.DataFrame): if we want to use other than raw data (e.g. for IMFs). if None the data is importet accoriding to 'names'
     """
     if method == 'all': 
         parameters = hyperparameters.get_all_combinations()
@@ -149,14 +170,16 @@ def find_best_hyperparameters(hyperparameters, names, run_model, start_year, n_p
                 best_historical_forecast = b_hf
         return best_error, best_hyperparameters, best_historical_forecast
 
-    x = load_and_prepare_data(names, split=hyperparameters.dic['p_test'], scaler=scaler, outlier_threshold=None, smoothing_window=None)
+    if data is None: 
+        data = load_data_list(names)
+    x = prepare_data(data, names, split=hyperparameters.dic['p_test'], scaler=scaler, outlier_threshold=None, smoothing_window=None)
     
     best_error = np.inf
     best_hyperparameters = None
     best_historical_forecast = None
     
     for j, p in enumerate(parameters): 
-        hf = backtesting(run_model, p, names, start_year, n_pred, scaler=x.scaler)
+        hf = backtesting(run_model, p, names, start_year, n_pred, scaler=x.scaler, data=data)
         error = get_error(x, hf, scale_back=False)
         if np.mean(error[optimizing_i]) < best_error: 
             best_error = np.mean(error[optimizing_i])
@@ -180,8 +203,6 @@ def find_best_hyperparameters(hyperparameters, names, run_model, start_year, n_p
             print(best_hyperparameters, file=file)
             print(' ', file=file)
             print(names[optimizing_i] + ' mean squared error over validation set: ' + str(best_error), file=file)
-
-    # x = load_and_prepare_data(names, split=best_hyperparameters['p_test'], scaler=scaler, outlier_threshold=best_hyperparameters['outlier'], smoothing_window=best_hyperparameters['smoothing'])
 
     return best_error, best_hyperparameters, best_historical_forecast # , x
     

@@ -107,12 +107,10 @@ def RRN(hyperparameters, train, model_type, verbose=False):
         loss_fn = hyperparameters["loss_function"],  # ignored if likelihood != None
         likelihood = hyperparameters["likelihood"],
         optimizer_cls = hyperparameters["optimizer"],
-        optimizer_kwargs={'lr': hyperparameters["learning_rate"], 'weight_decay': hyperparameters['weight_decay']},
-        # lr_scheduler?
+        optimizer_kwargs={'lr': hyperparameters["learning_rate"]}, #, 'weight_decay': hyperparameters['weight_decay']},
         batch_size=hyperparameters["batch_size"],
         n_epochs= hyperparameters["max_epochs"],
         random_state = hyperparameters["seed"],
-        # training_length = hyperparameters["n_in"] + hyperparameters["n_out"],  # length of input and output time series used during training
     )
 
     # train model
