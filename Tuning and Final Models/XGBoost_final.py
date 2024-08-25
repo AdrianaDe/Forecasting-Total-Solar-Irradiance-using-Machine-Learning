@@ -42,7 +42,7 @@ series = load_and_prepare_data(names, split=hyperparameters['p_test'], scaler=sc
 
 series_transfer = load_and_prepare_data(transfer_names, split=hyperparameters['p_test'], scaler=scaler, outlier_threshold=None, smoothing_window=None)
 
-"""
+
 #####################################################
 ######## BACKTEST WTHOUT BOOTSTRAPPING ##############
 #####################################################
@@ -59,7 +59,7 @@ with open(savingpath+error_file, 'w') as file:
         print('\n', names[i], ': ', error[i], file = file)
         print('mean: ', np.mean(error[0]), file = file)
     print('\n', file = file)
-"""
+
 
 #####################################################
 ######## FORCAST WITHOUT BOOTSTRAPPING ##############
