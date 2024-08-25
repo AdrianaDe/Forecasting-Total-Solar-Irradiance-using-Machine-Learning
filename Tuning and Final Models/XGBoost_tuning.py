@@ -18,7 +18,7 @@ savingpath = './XGBoost/tuning/'
 scaler = Scaler(StandardScaler())
 start_year = 1968
 n_pred = 11*12
-n_iterations = 1 # numer of random combination testet FOR EACH DATA PARAMETER COMBINATION (i.e. smoothing, outlier, n_in, n_out)
+n_iterations = 100 # numer of random combination testet FOR EACH DATA PARAMETER COMBINATION (i.e. smoothing, outlier, n_in, n_out)
 
 # Hyperparameter range over which we search best parameters
 hyperparameters = Hyperparameters({
