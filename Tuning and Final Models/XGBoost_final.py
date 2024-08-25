@@ -52,12 +52,12 @@ plot_backtest(series, historical_forecast, savingpath=savingpath)
 error = get_error(series, historical_forecast, scale_back=False)
 
 # write error to error_file
-with open(savingpath+error_file, 'w') as file: 
+with open(savingpath+error_file, 'a') as file: 
     print('\n' + '*'*30, file=file)
     print('BACKTESTING ERROR', file=file)
     for i in range(len(names)): 
         print('\n', names[i], ': ', error[i], file = file)
-        print('mean: ', np.mean(error[0]), file = file)
+        print('mean: ', np.mean(error[i]), file = file)
     print('\n', file = file)
 
 
@@ -81,15 +81,15 @@ plot_with_upper_and_lower(series_transfer, prediction_transfer, None, None, refe
 ################ BLOCK BOOTSTRAP ####################
 #####################################################
 # block bootstrapping with NRL and PMOD
-mean, lower_bounds, upper_bounds, _, _, _ = block_bootstrap_(series, xgboost, hyperparameters, n_bootstrap, n_pred, alphas=alphas, x_transfer=None, savingpath=savingpath)
-mean_transf, lower_bounds_transf, upper_bounds_transf, _, _, _ = block_bootstrap_(series_transfer, xgboost, hyperparameters, n_bootstrap, n_pred, alphas=alphas, x_transfer=None, savingpath=savingpath)
+mean, lower_bounds, upper_bounds, _, _, _ = block_bootstrap_(series, xgboost, hyperparameters, n_bootstrap, n_pred, alphas=alphas, x_transfer=None)
+mean_transf, lower_bounds_transf, upper_bounds_transf, _, _, _ = block_bootstrap_(series_transfer, xgboost, hyperparameters, n_bootstrap, n_pred, alphas=alphas, x_transfer=None)
 
 # plot results from bootstrapping
 plot_with_upper_and_lower(series, prediction, upper_bounds, lower_bounds, reference_series=None, alphas=alphas, savingpath=savingpath)
 plot_with_upper_and_lower(series_transfer, prediction_transfer, upper_bounds_transf, lower_bounds_transf, reference_series=None, alphas=alphas, savingpath=savingpath)
 
 # print to error_file
-with open(savingpath+error_file, 'w') as file: 
+with open(savingpath+error_file, 'a') as file: 
     print('\n' + '*'*30, file=file)
     print('RESULTS', file=file)
     print('\n NRL', file=file)
