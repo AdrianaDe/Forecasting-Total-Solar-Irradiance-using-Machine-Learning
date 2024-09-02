@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#SBATCH -n 1
+#SBATCH --time=4:00:00
+#SBATCH --mem-per-cpu=3000 
+#SBATCH --output="./output"
+
+module load stack/2024-06 python/3.10.13
+source /cluster/home/adesassi/Darts_requirement/tsi_env/bin/activate
+python ./Tuning_and_Final_Models/Naive_final.py

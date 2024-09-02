@@ -1,0 +1,21 @@
+
+******************************
+BACKTESTING ERROR
+
+ reconstructed_tsi :  [0.052832744897548294, 0.12763125069800746, 0.10704287423498778, 0.1348799506445828]
+mean:  0.10559670511878158
+
+
+
+
+DIRECT FORECAST NRL mean square error on test set
+
+ reconstructed_tsi :  [[0.07645330963482136, 0.49139171202124293]]
+
+
+DIRECT FORECAST PMOD mean square error on test set
+
+ reconstructed_tsi :  [[0.05248165800383961, 0.17489618022262904]]
+
+
+******************************
