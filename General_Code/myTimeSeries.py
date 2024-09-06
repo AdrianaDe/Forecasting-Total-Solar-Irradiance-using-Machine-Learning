@@ -5,8 +5,6 @@ from datetime import datetime
 from darts.utils.model_selection import train_test_split
 import sys
 from darts.metrics import mse
-import numpy as np
-import math
 
 class myTimeSeries: 
     """
@@ -97,11 +95,12 @@ class myTimeSeries:
         if split is None or split == 0: # no split
             return self.series, None
         elif split > 1: # split at that year
-            n = sum(self.series.time_index >= pd.Timestamp(split, 1, 1))
+            train = self.series.slice(start_ts = self.series.time_index[0], end_ts=pd.Timestamp(datetime(split-1,12,1)))
+            test = self.series.slice(start_ts = pd.Timestamp(datetime(split,1,1)), end_ts = self.series.time_index[-1])
+            return train, test
         else: # split is <=1 and therefore a percentage
-            n = split
-
-        return train_test_split(self.series, test_size=n)
+            return train_test_split(self.series, test_size=split)
+    
 
     def scale_back(self, scaled_series): 
         """
